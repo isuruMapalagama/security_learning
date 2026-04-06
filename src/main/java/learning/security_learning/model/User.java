@@ -33,7 +33,8 @@ public class User {
     private boolean enabled = true;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
