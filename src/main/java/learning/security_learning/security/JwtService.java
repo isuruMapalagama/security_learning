@@ -34,7 +34,7 @@ public class JwtService {
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigninKey())
+//                .signWith(getSigninKey())
                 .compact();
     }
     public String extractUsername(String token){

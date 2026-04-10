@@ -7,15 +7,13 @@ import learning.security_learning.dto.request.RegisterRequest;
 import learning.security_learning.dto.response.ApiResponse;
 import learning.security_learning.dto.response.AuthResponse;
 import learning.security_learning.dto.response.RegisterResponse;
+import learning.security_learning.security.RsaKeyService;
 import learning.security_learning.service.AuthService;
 import learning.security_learning.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +23,15 @@ public class AuthController {
 
     private final UserService userService;
     private final AuthService authService;
+    private final RsaKeyService rsaKeyService;
+
+    @GetMapping("/public-key")
+    public ResponseEntity<ApiResponse<String>> getPublicKey() {
+        return ResponseEntity.ok(
+                ApiResponse.success("Public key retrieved",
+                        rsaKeyService.getPublicKeyBase64())
+        );
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> registerUser(

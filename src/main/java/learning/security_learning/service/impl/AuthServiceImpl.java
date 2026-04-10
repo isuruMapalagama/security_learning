@@ -10,6 +10,7 @@ import learning.security_learning.model.User;
 import learning.security_learning.repositories.RefreshTokenRepository;
 import learning.security_learning.repositories.UserRepository;
 import learning.security_learning.security.JwtService;
+import learning.security_learning.security.RsaKeyService;
 import learning.security_learning.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final RsaKeyService rsaKeyService;
+
 
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpiration;
@@ -45,18 +48,22 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Login attempt for username: {}", request.getUsername());
 
+        String decryptedPassword = rsaKeyService.decrypt(request.getPassword());
+        log.info("Password decrypted successfully");
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
-                        request.getPassword()
+                        decryptedPassword
                 )
         );
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
+                .orElseThrow(() ->
+                        new BadCredentialsException("Invalid username or password user"));
+//
+//        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+//            throw new BadCredentialsException("Invalid username or password");
+//        }
         refreshTokenRepository.deleteAllByUser(user);
 
         String accessToken = jwtService
@@ -85,7 +92,8 @@ public class AuthServiceImpl implements AuthService {
 
         RefreshToken refreshToken = refreshTokenRepository
                 .findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
+                .orElseThrow(() ->
+                        new InvalidTokenException("Refresh token not found"));
 
         if (refreshToken.isRevoked()) {
             throw new InvalidTokenException("Refresh token has been revoked");
